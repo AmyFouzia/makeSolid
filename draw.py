@@ -1,9 +1,73 @@
 from display import *
 from matrix import *
 from gmath import *
+import random
+
+def findMax(lsit):
+    max = -99999999999999999999999999999999999999999999999999999999999
+    bruh = None
+    for i in range(len(lsit)):
+        if(lsit[i][1] > max):
+            max = lsit[i][1]
+            bruh = lsit[i]
+    return bruh
 
 def scanline_convert(polygons, i, screen, zbuffer ):
-    pass
+    c = [random.randint(0,255),random.randint(0,255),random.randint(0,255)]
+    temp = [polygons[i],polygons[i+1],polygons[i+2]]
+    top = findMax(temp)
+    temp.remove(top)
+    mid = findMax(temp)
+    temp.remove(mid)
+    bot = findMax(temp)
+
+    x0 = bot[0]
+    x1 = bot[0]
+    y = bot[1]
+    z0 = bot[2]
+    z1 = mid[2]
+
+    if top[1] != bot[1]:
+        slope1 = (top[0] - x0) / (top[1] - bot[1])
+        slope2 = (top[2] - z0) / (top[1] - bot[1])
+    else:
+        slope1 = 0
+        slope2 = 0
+    if mid[1] != bot[1]:
+        dx1 = (mid[0] - x0) / (mid[1] - bot[1])
+        dz1 = (mid[2] - z0) / (mid[1] - bot[1])
+    else:
+        dx1 = 0
+        dz1 = 0
+
+    while y < mid[1]:
+        draw_line(int(x0), int(y), int(z0), int(x1), int(y), int(z1), screen, zbuffer, c)
+        x0 += slope1
+        x1 += dx1
+        z0 += slope2
+        z1 += dz1
+        y += 1
+
+    y = mid[1]
+    x1 = mid[0]
+    z1 = mid[2]
+
+    if mid[1] != top[1]:
+        dx1 = (top[0] - x1) / (top[1] - mid[1])
+        dz1 = (top[2] - z1) / (top[1] - mid[1])
+    else:
+        dx1 = 0
+        dz1 = 0
+
+    while y < top[1]:
+        draw_line(int(x0), int(y), int(z0), int(x1), int(y), int(z1), screen, zbuffer, c)
+        x0 += slope1
+        x1 += dx1
+        z0 += slope2
+        z1 += dz1
+        y += 1
+
+
 
 def add_polygon( polygons, x0, y0, z0, x1, y1, z1, x2, y2, z2 ):
     add_point(polygons, x0, y0, z0)
@@ -21,27 +85,7 @@ def draw_polygons( polygons, screen, zbuffer, color ):
         normal = calculate_normal(polygons, point)[:]
         #print normal
         if normal[2] > 0:
-            draw_line( int(polygons[point][0]),
-                       int(polygons[point][1]),
-                       polygons[point][2],
-                       int(polygons[point+1][0]),
-                       int(polygons[point+1][1]),
-                       polygons[point+1][2],
-                       screen, zbuffer, color)
-            draw_line( int(polygons[point+2][0]),
-                       int(polygons[point+2][1]),
-                       polygons[point+2][2],
-                       int(polygons[point+1][0]),
-                       int(polygons[point+1][1]),
-                       polygons[point+1][2],
-                       screen, zbuffer, color)
-            draw_line( int(polygons[point][0]),
-                       int(polygons[point][1]),
-                       polygons[point][2],
-                       int(polygons[point+2][0]),
-                       int(polygons[point+2][1]),
-                       polygons[point+2][2],
-                       screen, zbuffer, color)
+            scanline_convert(polygons,point,screen,zbuffer)
         point+= 3
 
 
